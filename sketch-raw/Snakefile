@@ -1,0 +1,40 @@
+RAW_GENOME_LOCATION='/group/ctbrowngrp2/amhorst/2025-pigparadigm/results/MAGs/all_genomes'.rstrip('/')
+EXTENSION='fasta'
+NAMES,=glob_wildcards(RAW_GENOME_LOCATION + '/' + '{name}' + '.' + EXTENSION)
+
+print(f'found {len(NAMES)} raw genomes.')
+print(f'example name:', NAMES[0] + '.' + EXTENSION)
+
+
+###
+
+import csv
+
+rule all:
+    input:
+        'manysketch-raw.csv',
+        'bin-sketches.sig.zip',
+
+rule make_manysketch_csv:
+    output:
+        'manysketch-raw.csv'
+    run:
+        with open(output[0], 'w', newline='') as fp:
+            w = csv.writer(fp)
+            w.writerow(['name', 'genome_filename', 'protein_filename'])
+            for name in NAMES:
+                location = f"{RAW_GENOME_LOCATION}/{name}.{EXTENSION}"
+                w.writerow([name, location, ''])
+
+rule sketch:
+    input:
+        'manysketch-raw.csv',
+    output:
+        'bin-sketches.sig.zip',
+    threads: 64
+    params:
+        sketchtype="dna,k=31"
+    shell: """
+        sourmash scripts manysketch -c {threads} {input} -o {output} \
+            -p {params.sketchtype}
+    """
