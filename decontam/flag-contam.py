@@ -35,6 +35,8 @@ def main():
 
     rank_idx = RANKS.index(args.fail_rank)
 
+    n_total = 0
+    n_contam = 0
     for query_name, rows in query_d.items():
         lineages = [ (row['lineage'], row['f_unique_to_query']) for row in rows ]
 
@@ -56,11 +58,16 @@ def main():
         domfrac /= total_known_fraction
         if args.verbose:
             print(f'{query_name}: f_known for dominant lin {domlin[-1]}: {domfrac:0.3f}')
+
+        n_total += 1
         if domfrac > args.min_fraction:
             pass
         else:
             ident = query_name.split(' ')[0]
             print(f'{ident}: contaminated. dominant lineage is only {domfrac:0.3f} of total known.')
+            n_contam += 1
+
+    print(f"{n_contam} contaminated of {n_total}; {n_contam/n_total*100:.1f}%")
 
 
 if __name__ == '__main__':
