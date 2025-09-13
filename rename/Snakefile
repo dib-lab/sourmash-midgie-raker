@@ -1,0 +1,142 @@
+RAW_GENOME_LOCATION='/group/ctbrowngrp2/amhorst/2025-pigparadigm/results/MAGs/all_genomes'.rstrip('/')
+EXTENSION='fasta'
+NAMES, =glob_wildcards(RAW_GENOME_LOCATION + '/' + '{name}' + '.' + EXTENSION)
+
+print(f'found {len(NAMES)} raw genomes.')
+print(f'example name:', NAMES[0] + '.' + EXTENSION)
+
+SKETCHES='../sketch-raw/bin-sketches.sig.zip'
+
+GTDB_DB = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
+GTDB_TAX = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqldb'
+
+RANKS = 'superkingdom,phylum,class,order,family,genus,species'.split(',')
+
+NEW_PREFIX='AtH'
+
+
+import csv
+import sourmash
+
+
+def parse_raw_name(name):
+    "Parses name of form: 'AtH2023_SRR17241613_MAG43'"
+    assert name.startswith('AtH2023_')
+
+    study, metag, mag = name.split('_')
+    return metag, mag
+
+NAME_INFO = {}
+FILE_INFO = {}
+for name in NAMES:
+    NAME_INFO[name] = parse_raw_name(name)
+    FILE_INFO[name] = RAW_GENOME_LOCATION + '/' + name + '.' + EXTENSION
+
+
+rule all:
+    input:
+        'raw-sketch-gather.csv',
+        'raw-sketch-gather.with-lineages.csv',
+        'raw-sketch-gather.classifications.csv',
+        'raw-sketch.lineages.csv',
+        'raw-sketch.unclassified.csv',
+        'manysketch-renamed.csv',
+
+
+rule gather_raw_sketches:
+    input:
+        SKETCHES
+    output:
+        'raw-sketch-gather.csv',
+    threads: 1                  # against rocksdb, yah?
+    shell: """
+        sourmash scripts fastmultigather {input} {GTDB_DB} \
+           -k 31 --threshold-bp=100_000 --scaled=10_000 \
+           -o {output} -c {threads}
+    """
+
+rule tax_annotate:
+    input:
+        'raw-sketch-gather.csv',
+    output:
+        'raw-sketch-gather.with-lineages.csv',
+    shell: """
+        sourmash tax annotate -g {input} -t {GTDB_TAX}
+    """
+
+rule tax_genome:
+    input:
+        'raw-sketch-gather.csv',
+    output:
+        'raw-sketch-gather.classifications.csv'
+    params:
+        prefix='raw-sketch-gather',
+    shell: """
+        sourmash tax genome -g {input} -t {GTDB_TAX} -o {params.prefix}
+    """
+
+rule process_csv:
+    input:
+        classify='raw-sketch-gather.classifications.csv',
+        sketches=SKETCHES,
+    output:
+        lineages='raw-sketch.lineages.csv',
+        unclass='raw-sketch.unclassified.csv',
+        rename='manysketch-renamed.csv',
+    run:
+        with open(input.classify, 'r', newline='') as fp:
+            r = csv.DictReader(fp)
+
+            rows = list(r)
+
+        lin_w = csv.writer(open(output.lineages, 'w', newline=''))
+        lin_w.writerow(['ident'] + RANKS)
+
+        unclass_w = csv.writer(open(output.unclass, 'w', newline=''))
+        unclass_w.writerow(['ident'])
+
+        rename_w = csv.writer(open(output.rename, 'w', newline=''))
+        rename_w.writerow(['name', 'genome_filename', 'protein_filename'])
+
+        found = set()
+        n_classify = 0
+        n_unclass = 0
+
+        for row in rows:
+            ident = row['query_name']
+            assert ident in NAME_INFO
+            found.add(ident)
+
+            classify_at_species = False
+            if row['status'] == 'match':
+                lin = row['lineage'].split(';')
+                if len(lin) == len(RANKS):
+                    classify_at_species = True
+                    n_classify += 1
+
+                    new_ident = f"{NEW_PREFIX}_MAG{n_classify}"
+                    lin_w.writerow([ident] + lin)
+
+                    metag, mag = NAME_INFO[ident]
+                    new_name = f"{new_ident} {lin[-1]} ({metag}_{mag})"
+                    genomefile = FILE_INFO[ident]
+                    rename_w.writerow([new_name, genomefile, ''])
+
+
+            if not classify_at_species:
+                unclass_w.writerow([ident])
+                n_unclass += 1
+                
+        db = sourmash.load_file_as_index(input.sketches)
+        mf = db.manifest
+
+        for row in mf.rows:
+            ident = row['name'].split(' ')[0]
+            assert ident, f"'{ident}' is empty for {row['name']}"
+            if ident not in found:
+                unclass_w.writerow([ident])
+                n_unclass += 1
+
+
+        assert n_unclass + n_classify == len(NAMES), "are we missing something??"
+
