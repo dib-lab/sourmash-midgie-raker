@@ -41,6 +41,7 @@ rule all:
         'raw-sketch.lineages.csv',
         'raw-sketch.unclassified.csv',
         'manysketch-renamed.csv',
+        'bin-sketches.renamed.sig.zip',
 
 
 rule gather_raw_sketches:
@@ -140,3 +141,16 @@ rule process_csv:
 
         assert n_unclass + n_classify == len(NAMES), "are we missing something??"
 
+
+rule sketch:
+    input:
+        'manysketch-renamed.csv',
+    output:
+        'bin-sketches.renamed.sig.zip',
+    threads: 64
+    params:
+        sketchtype="dna,k=21,k=31,k=51"
+    shell: """
+        sourmash scripts manysketch -c {threads} {input} -o {output} \
+            -p {params.sketchtype}
+    """

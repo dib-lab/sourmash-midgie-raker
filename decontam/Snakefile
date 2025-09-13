@@ -1,0 +1,72 @@
+DBLIST=['/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k51.dna.rocksdb',
+        '/group/ctbrowngrp5/sourmash-db.new/ncbi-euks-2025.01/ncbi-euks-all-2025.01-k51.dna.rocksdb/',
+        ]
+TAXLIST=['/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqldb',
+         '/group/ctbrowngrp5/sourmash-db.new/ncbi-euks-2025.01/ncbi-eukaryotes.2025.01.lineages.sqldb',
+         ]
+
+SKETCHES='../rename/bin-sketches.renamed.sig.zip'
+
+import glob, csv
+
+rule all:
+    input:
+        'multigather.d',
+        'combined-gather.csv',
+        'combined-gather.with-lineages.csv'
+
+
+# argh, bug https://github.com/sourmash-bio/sourmash/issues/3811
+rule downsample_sketches:
+    input:
+        SKETCHES,
+    output:
+        'sketches.k51.sig.zip',
+    shell: """
+        sourmash sig downsample {input} -o {output} --scaled 10_000
+    """
+
+
+rule multigather:
+    input:
+        sketches='sketches.k51.sig.zip',
+        dblist=DBLIST,
+    output:
+        protected(directory('multigather.d'))
+    shell: """
+        mkdir {output}
+        sourmash multigather --db {input.dblist} -k 51 --scaled 10_000 \
+            --query {input.sketches} --threshold-bp=0 --output-dir {output}
+    """
+
+rule combine_csv:
+    input:
+        'multigather.d',
+    output:
+        'combined-gather.csv'
+    run:
+        filenames = glob.glob('multigather.d/*.csv')
+        outfp = None
+        w = None
+        fieldnames = None
+        for filename in filenames:
+            with open(filename, 'r', newline='') as fp:
+                r = csv.DictReader(fp)
+                fieldnames = r.fieldnames
+
+                if outfp is None:
+                    outfp = open(output[0], 'w', newline='')
+                    w = csv.DictWriter(outfp, fieldnames=fieldnames)
+                    w.writeheader()
+
+                for row in r:
+                    w.writerow(row)
+
+rule tax_annotate:
+    input:
+        'combined-gather.csv',
+    output:
+        protected('combined-gather.with-lineages.csv'),
+    shell: """
+        sourmash tax annotate -g {input} -t {TAXLIST}
+    """
