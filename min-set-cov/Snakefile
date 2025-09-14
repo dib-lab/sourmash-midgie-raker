@@ -1,0 +1,15 @@
+SKETCHES = '../rename/bin-sketches.renamed.sig.zip'
+
+DB='/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
+
+
+rule fastmultigather:
+    input:
+        SKETCHES
+    output:
+        'sketches.x.gtdb.fastgather.csv'
+    threads: 1
+    shell: """
+        sourmash scripts fastmultigather -k 31 {input} {DB} -o {output} \
+            --threshold-bp=0 -c 1
+    """
