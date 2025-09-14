@@ -1,15 +1,121 @@
+# TODO:
+# - display tax output
+
 SKETCHES = '../rename/bin-sketches.renamed.sig.zip'
 
 DB='/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
+TAX='/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqldb'
+
+import csv
+import collections
+import os
+
+
+rule all:
+    input:
+        'sketches.x.gtdb.fastgather.csv',
+        'sketches.x.gtdb.fastgather.d',
+        '.get-matches.touch',
+        '.gather-ann.touch'
 
 
 rule fastmultigather:
     input:
         SKETCHES
     output:
-        'sketches.x.gtdb.fastgather.csv'
+        protected('sketches.x.gtdb.fastgather.csv')
     threads: 1
     shell: """
         sourmash scripts fastmultigather -k 31 {input} {DB} -o {output} \
             --threshold-bp=0 -c 1
+    """
+
+rule gtdb_mf:
+    input:
+        DB,
+    output:
+        'gtdb.mf.sqldb',
+    shell: """
+        sourmash sig collect {input} -o {output} -F sql
+    """
+
+checkpoint split_results:
+    input:
+        'sketches.x.gtdb.fastgather.csv'
+    output:
+        directory('sketches.x.gtdb.fastgather.d')
+    run:
+        os.mkdir(output[0])
+
+        # collect rows by query_name
+        results = collections.defaultdict(list)
+        fieldnames = None
+        with open(input[0], 'r', newline='') as fp:
+            r = csv.DictReader(fp)
+            
+            for row in r:
+                results[row['query_name']].append(row)
+            fieldnames = r.fieldnames
+
+        print(f'loaded gather results for {len(results)} queries')
+
+        # split out into different CSVs
+        for query_name, rows in results.items():
+            ident = query_name.split(' ')[0]
+            outpath = output[0] + '/' f'{ident}.gather.csv'
+            with open(outpath, 'w', newline='') as fp:
+                w = csv.DictWriter(fp, fieldnames=fieldnames)
+                w.writeheader()
+                for row in rows:
+                    w.writerow(row)
+
+def aggregate_gather_files_mf(wc):
+    checkpoint_output = checkpoints.split_results.get(**wc).output[0]
+
+    idents = glob_wildcards('sketches.x.gtdb.fastgather.d/{x}.gather.csv').x
+    return expand('sketches.x.gtdb.fastgather.d/{ident}.gtdb-matches.mf.sqlite',
+                  ident=idents)
+
+
+def aggregate_gather_files_ann(wc):
+    checkpoint_output = checkpoints.split_results.get(**wc).output[0]
+
+    idents = glob_wildcards('sketches.x.gtdb.fastgather.d/{x}.gather.csv').x
+    return expand('sketches.x.gtdb.fastgather.d/{ident}.gather.with-lineages.csv',
+                  ident=idents)
+
+
+rule process_gather_csvs:
+    input:
+        aggregate_gather_files_mf
+    output:
+        touch('.get-matches.touch')
+
+
+rule process_gather_csvs2:
+    input:
+        aggregate_gather_files_ann
+    output:
+        touch('.gather-ann.touch')
+
+
+rule process_gather_csvs_wc:
+    input:
+        picklist='sketches.x.gtdb.fastgather.d/{ident}.gather.csv',
+        manifest='gtdb.mf.sqldb',
+    output:
+        'sketches.x.gtdb.fastgather.d/{ident}.gtdb-matches.mf.sqlite',
+    shell: """
+        sourmash sig check --picklist {input.picklist}:match_name:ident \
+           {input.manifest} -m {output} -F sql --abspath
+    """
+
+rule process_gather_csvs2_wc:
+    input:
+        'sketches.x.gtdb.fastgather.d/{ident}.gather.csv',
+    output:
+        'sketches.x.gtdb.fastgather.d/{ident}.gather.with-lineages.csv',
+    shell: """
+        sourmash tax annotate -g {input} -t {TAX} \
+           -o sketches.x.gtdb.fastgather.d
     """

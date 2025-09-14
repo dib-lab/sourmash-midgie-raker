@@ -1,0 +1,33 @@
+PAIRS=[ ('AtH_MAG9308', 'SRR5241537'),
+        ('AtH_MAG5399', 'SRR5241537'),
+       ]
+
+OUTPUTS=[ f'cov.{ident}.{metag}/' for (ident, metag) in PAIRS ]
+
+SKETCHES = '../rename/bin-sketches.renamed.sig.zip'
+
+rule all:
+    input:
+        OUTPUTS
+
+
+rule make_cov:
+    input:
+        "metags/{metag}.trim.sig.zip",
+    output:
+        directory('cov.{ident}.{metag}')
+    params:
+        identspace="{ident} "
+    shell: """
+        mkdir {output}
+
+        sourmash sig grep {params.identspace:q} {SKETCHES} -o \
+            {output}/{wildcards.ident}.sig.zip -k 31
+
+        sourmash sig intersect {output}/{wildcards.ident}.sig.zip {input} \
+            -A {input} --set-name isect-abund \
+            -k 31 -o {output}/isect-abund.sig.zip
+
+        sourmash scripts abundhist {output}/isect-abund.sig.zip \
+            --figure {output}/isect-abund.png --bins 20
+    """
