@@ -1,8 +1,47 @@
-PAIRS=[ ('AtH_MAG9308', 'SRR5241537'),
-        ('AtH_MAG5399', 'SRR5241537'),
-       ]
+PLOTME = dict(SRR5241537=['AtH_MAG5224',
+                          'AtH_MAG5399',
+                          'AtH_MAG6413',
+                          'AtH_MAG9308',
+                          'AtH_MAG9440',
+                          'AtH_MAG10004',
+                          'AtH_MAG10647',
+                          'AtH_MAG10657',
+                          ],
+              SRR15057925=[
+                  'AtH_MAG825',
+                  'AtH_MAG847',
+                  'AtH_MAG1136',
+                  'AtH_MAG4129',
+                  'AtH_MAG5187',
+                  'AtH_MAG5428',
+                  'AtH_MAG7130',
+                  'AtH_MAG7386',
+                  'AtH_MAG8208',
+              ],
+              SRR15057930=[
+                  'AtH_MAG1198',
+                  'AtH_MAG1446',
+                  'AtH_MAG1596',
+                  'AtH_MAG3743',
+                  'AtH_MAG4165',
+                  'AtH_MAG4235',
+                  'AtH_MAG4585',
+                  'AtH_MAG5662',
+                  'AtH_MAG5955',
+                  'AtH_MAG6150',
+                  'AtH_MAG6640',
+                  'AtH_MAG8258',
+                  'AtH_MAG8401',
+                  'AtH_MAG8502',
+                  'AtH_MAG10738',
+                  'AtH_MAG10773',
+              ],
+              )
 
-OUTPUTS=[ f'cov.{ident}.{metag}/' for (ident, metag) in PAIRS ]
+OUTPUTS = []
+for metag, maglist in PLOTME.items():
+    for ident in maglist:
+        OUTPUTS.append(f'cov.{ident}.{metag}/')
 
 SKETCHES = '../rename/bin-sketches.renamed.sig.zip'
 
@@ -17,7 +56,8 @@ rule make_cov:
     output:
         directory('cov.{ident}.{metag}')
     params:
-        identspace="{ident} "
+        identspace="{ident} ",
+        title="k-mer abundance hist of {ident} in {metag}",
     shell: """
         mkdir {output}
 
@@ -29,5 +69,6 @@ rule make_cov:
             -k 31 -o {output}/isect-abund.sig.zip
 
         sourmash scripts abundhist {output}/isect-abund.sig.zip \
-            --figure {output}/isect-abund.png --bins 20
+            --figure {output}/isect-abund.png --bins 20 \
+            --figure-title {params.title:q}
     """

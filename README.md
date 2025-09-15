@@ -19,5 +19,9 @@ profiles of them with `gather` against GTDB, and renames them consistently.
 Next, run `decontam`, which profiles the sketches against eukaryotes + GTDB,
 and flags bins that contain substantial amounts of multi-class content.
 
-Then, `min-set-cov`...
+Then, run `min-set-cov`. This profiles the bins against GTDB,
+determining the size of the minimum set cover for each bin, and also
+calculating the novelty in each bin.
 
+Finally, the `bin-coverage` code will calculate coverage histograms
+for selection MAG x metagenome comparisons.
