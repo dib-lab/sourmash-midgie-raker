@@ -1,0 +1,39 @@
+# TODO:
+# - taxburst of merged
+
+SKETCHES = '../rename/bin-sketches.renamed.sig.zip'
+
+rule all:
+    input:
+        'merged.x.sketches.gather.csv',
+
+
+rule merge:
+    input:
+        SKETCHES,
+    output:
+        'merged.sig.zip',
+    shell: """
+        sourmash sig merge -k 31 {input} -o {output} --set-name merged-sketches
+    """
+
+rule index:
+    input:
+        SKETCHES,
+    output:
+        directory('bin-sketches.k31.rocksdb'),
+    shell: """
+        sourmash index -F rocksdb {output} {input} -k 31
+    """
+
+rule gather:
+    input:
+        merge='merged.sig.zip',
+        sketches='bin-sketches.k31.rocksdb',
+    output:
+        'merged.x.sketches.gather.csv',
+    threads: 64
+    shell: """
+        sourmash gather -k 31 {input.merge} {input.sketches} \
+            --threshold-bp=0 -o {output}
+    """
