@@ -38,7 +38,7 @@ rule all:
         'raw-sketch-gather.csv',
         'raw-sketch-gather.with-lineages.csv',
         'raw-sketch-gather.classifications.csv',
-        'raw-sketch.lineages.csv',
+        'bin-sketches.lineages.csv',
         'raw-sketch.unclassified.csv',
         'manysketch-renamed.csv',
         'bin-sketches.renamed.sig.zip',
@@ -81,7 +81,7 @@ rule process_csv:
         classify='raw-sketch-gather.classifications.csv',
         sketches=SKETCHES,
     output:
-        lineages='raw-sketch.lineages.csv',
+        lineages='bin-sketches.lineages.csv',
         unclass='raw-sketch.unclassified.csv',
         rename='manysketch-renamed.csv',
     run:
@@ -116,7 +116,7 @@ rule process_csv:
                     n_classify += 1
 
                     new_ident = f"{NEW_PREFIX}_MAG{n_classify}"
-                    lin_w.writerow([ident] + lin)
+                    lin_w.writerow([new_ident] + lin)
 
                     metag, mag = NAME_INFO[ident]
                     new_name = f"{new_ident} {lin[-1]} ({metag}_{mag})"
