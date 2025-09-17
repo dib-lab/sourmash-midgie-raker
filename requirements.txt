@@ -3,3 +3,4 @@ sourmash_plugin_branchwater>=0.9.13
 sourmash_plugin_abundhist==0.3.2
 snakemake
 matplotlib
+taxburst

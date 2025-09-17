@@ -13,7 +13,7 @@ rule all:
     input:
         'multigather.d',
         'combined-gather.csv',
-        'combined-gather.with-lineages.csv'
+        'combined-gather.with-lineages.csv',
 
 
 # argh, bug https://github.com/sourmash-bio/sourmash/issues/3811

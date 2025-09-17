@@ -42,6 +42,7 @@ rule all:
         'raw-sketch.unclassified.csv',
         'manysketch-renamed.csv',
         'bin-sketches.renamed.sig.zip',
+        'bin-sketches.taxburst.html',
 
 
 rule gather_raw_sketches:
@@ -153,4 +154,15 @@ rule sketch:
     shell: """
         sourmash scripts manysketch -c {threads} {input} -o {output} \
             -p {params.sketchtype}
+    """
+
+rule taxburst_genomes:
+    input:
+        sketches='bin-sketches.renamed.sig.zip',
+        tax='bin-sketches.lineages.csv',
+    output:
+        'bin-sketches.taxburst.html',
+    shell: """
+        ./build-sourmash-db-view.py {input.sketches} -t {input.tax} \
+           -o {output}
     """
