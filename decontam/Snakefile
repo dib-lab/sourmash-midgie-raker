@@ -23,7 +23,7 @@ rule downsample_sketches:
     output:
         'sketches.k51.sig.zip',
     shell: """
-        sourmash sig downsample {input} -o {output} --scaled 10_000
+        sourmash sig downsample {input} -o {output} --scaled 10_000 -k 51
     """
 
 
