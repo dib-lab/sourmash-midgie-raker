@@ -12,6 +12,7 @@ def main():
     p.add_argument('-r', '--fail-rank', default='class')
     p.add_argument('-m', '--min-fraction', default=0.95, type=float)
     p.add_argument('-v', '--verbose', action='store_true')
+    p.add_argument('-o', '--output')
     args = p.parse_args()
 
     query_d = collections.defaultdict(list)
@@ -37,6 +38,7 @@ def main():
 
     n_total = 0
     n_contam = 0
+    contam = []
     for query_name, rows in query_d.items():
         lineages = [ (row['lineage'], row['f_unique_to_query']) for row in rows ]
 
@@ -66,8 +68,17 @@ def main():
             ident = query_name.split(' ')[0]
             print(f'{ident}: contaminated. dominant lineage is only {domfrac:0.3f} of total known.')
             n_contam += 1
+            contam.append((domfrac, ident))
 
     print(f"{n_contam} contaminated of {n_total}; {n_contam/n_total*100:.1f}%")
+
+    if args.output:
+        contam.sort()
+        with open(args.output, "w", newline='') as fp:
+            w = csv.writer(fp)
+            w.writerow(['domfrac', 'ident'])
+            for (domfrac, ident) in contam:
+                w.writerow([domfrac, ident])
 
 
 if __name__ == '__main__':

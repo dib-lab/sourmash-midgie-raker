@@ -1,7 +1,15 @@
-RAW_GENOME_LOCATION='/group/ctbrowngrp2/amhorst/2025-pigparadigm/results/MAGs/all_genomes'.rstrip('/')
-EXTENSION='fasta'
-NAMES, =glob_wildcards(RAW_GENOME_LOCATION + '/' + '{name}' + '.' + EXTENSION)
+import pprint
 
+configfile: '../config.yaml'
+print('config from ../config.yaml is:')
+pprint.pprint(config)
+
+RAW_GENOME_LOCATION=config.get('base')['bin_location'].rstrip('/')
+EXTENSION=config.get('base')['extension']
+NAMES, = glob_wildcards(RAW_GENOME_LOCATION + '/' + '{name}' + '.' + EXTENSION)
+
+print('using bin location:', RAW_GENOME_LOCATION)
+print('using bin extension:', EXTENSION)
 print(f'found {len(NAMES)} raw genomes.')
 print(f'example name:', NAMES[0] + '.' + EXTENSION)
 
@@ -12,25 +20,30 @@ GTDB_TAX = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sq
 
 RANKS = 'superkingdom,phylum,class,order,family,genus,species'.split(',')
 
-NEW_PREFIX='AtH'
+KEEP_ORIGINAL_IDENT=config.get('rename')['keep_original_ident']
+NEW_PREFIX=config.get('rename')['new_prefix']
 
+###
 
 import csv
 import sourmash
 
 
 def parse_raw_name(name):
-    "Parses name of form: 'AtH2023_SRR17241613_MAG43'"
-    assert name.startswith('AtH2023_')
+    "Parse name of bins, e.g. 'AtH2023_SRR17241613_MAG43' => study/metag/mag"
+    assert name.startswith('SHD1_')
 
-    study, metag, mag = name.split('_')
-    return metag, mag
+    study, mag = name.split('_')
+    return "SHD1", mag
 
 NAME_INFO = {}
 FILE_INFO = {}
+ORIG_NAME = {}
 for name in NAMES:
-    NAME_INFO[name] = parse_raw_name(name)
-    FILE_INFO[name] = RAW_GENOME_LOCATION + '/' + name + '.' + EXTENSION
+    ident = name.split(' ')[0]
+    NAME_INFO[ident] = parse_raw_name(name)
+    FILE_INFO[ident] = RAW_GENOME_LOCATION + '/' + name + '.' + EXTENSION
+    ORIG_NAME[ident] = name
 
 
 rule all:
@@ -104,11 +117,18 @@ rule process_csv:
         n_classify = 0
         n_unclass = 0
 
-        for row in rows:
-            ident = row['query_name']
+        for n, row in enumerate(rows):
+            ident = row['query_name'].split(' ')[0]
             assert ident in NAME_INFO
             found.add(ident)
 
+            # calculate new ident, if desired
+            if KEEP_ORIGINAL_IDENT:
+                new_ident = ident
+            else:
+                new_ident = f"{NEW_PREFIX}_MAG{n}"
+
+            # can we write a species classification?
             classify_at_species = False
             if row['status'] == 'match':
                 lin = row['lineage'].split(';')
@@ -116,31 +136,57 @@ rule process_csv:
                     classify_at_species = True
                     n_classify += 1
 
-                    new_ident = f"{NEW_PREFIX}_MAG{n_classify}"
                     lin_w.writerow([new_ident] + lin)
 
                     metag, mag = NAME_INFO[ident]
                     new_name = f"{new_ident} {lin[-1]} ({metag}_{mag})"
-                    genomefile = FILE_INFO[ident]
-                    rename_w.writerow([new_name, genomefile, ''])
 
-
+            # if not, that's just fiiiine.
             if not classify_at_species:
+                metag, mag = NAME_INFO[ident]
+                new_name = f"{new_ident} unknown ({metag}_{mag})"
                 unclass_w.writerow([ident])
                 n_unclass += 1
-                
+
+            # write out new name
+            genomefile = FILE_INFO[ident]
+            rename_w.writerow([new_name, genomefile, ''])
+
+        # check/confirm
         db = sourmash.load_file_as_index(input.sketches)
         mf = db.manifest
 
+        # one source of unclassified is no species match; another is no
+        # gather match!
+        # CTB: clean up/refactor so this is a single loop :(
         for row in mf.rows:
             ident = row['name'].split(' ')[0]
             assert ident, f"'{ident}' is empty for {row['name']}"
             if ident not in found:
+                found.add(ident)
+
+                # calculate new ident, if desired
+                n += 1
+                if KEEP_ORIGINAL_IDENT:
+                    new_ident = ident
+                else:
+                    new_ident = f"{NEW_PREFIX}_MAG{n}"
+
+                metag, mag = NAME_INFO[ident]
+                new_name = f"{new_ident} unknown ({metag}_{mag})"
+                genomefile = FILE_INFO[ident]
+                rename_w.writerow([new_name, genomefile, ''])
+                
                 unclass_w.writerow([ident])
                 n_unclass += 1
 
+        print(f'n_unclass: {n_unclass}')
+        print(f'n_classify: {n_classify}')
+        print(f'found: {len(found)}')
+        print(f'names: {len(NAMES)}')
 
-        assert n_unclass + n_classify == len(NAMES), "are we missing something??"
+        assert n_unclass + n_classify == len(NAMES), "are we missing something? (msg 1)?"
+        assert len(found) == len(NAMES), "are we missing something (msg 2)?"
 
 
 rule sketch:
@@ -164,5 +210,5 @@ rule taxburst_genomes:
         'bin-sketches.taxburst.html',
     shell: """
         ./build-sourmash-db-view.py {input.sketches} -t {input.tax} \
-           -o {output}
+           --max-rank-num=7 -o {output}
     """

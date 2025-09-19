@@ -58,17 +58,25 @@ def main():
     rows_by_tax = defaultdict(list)
     for name, row in sig_to_info.items():
         ident = name.split(".")[0].split(' ')[0]
-        lineage = taxdb[ident]
+        if ident in taxdb:
+            lineage = taxdb[ident]
 
-        for i in range(1, len(lineage) + 1):
-            lin = lineage[:i]
+            for i in range(1, len(lineage) + 1):
+                lin = lineage[:i]
+                rows_by_tax[lin].append(row)
+        else:
+            lin = ("unclassified",)
             rows_by_tax[lin].append(row)
 
     # build nodes & assign to tax
     nodes_by_tax = {}
     for lin, rows in rows_by_tax.items():
-        rank = lin[-1].rank
-        name = lin[-1].name
+        if lin == ("unclassified",):
+            name = "unclassified"
+            rank = "superkingdom"
+        else:
+            rank = lin[-1].rank
+            name = lin[-1].name
 
         count = len(rows)
         node = dict(name=name, rank=rank, count=count)

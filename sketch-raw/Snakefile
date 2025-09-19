@@ -1,10 +1,17 @@
-RAW_GENOME_LOCATION='/group/ctbrowngrp2/amhorst/2025-pigparadigm/results/MAGs/all_genomes'.rstrip('/')
-EXTENSION='fasta'
-NAMES,=glob_wildcards(RAW_GENOME_LOCATION + '/' + '{name}' + '.' + EXTENSION)
+import pprint
 
+configfile: '../config.yaml'
+print('config from ../config.yaml is:')
+pprint.pprint(config)
+
+RAW_GENOME_LOCATION=config.get('base')['bin_location'].rstrip('/')
+EXTENSION=config.get('base')['extension']
+NAMES, = glob_wildcards(RAW_GENOME_LOCATION + '/' + '{name}' + '.' + EXTENSION)
+
+print('using bin location:', RAW_GENOME_LOCATION)
+print('using bin extension:', EXTENSION)
 print(f'found {len(NAMES)} raw genomes.')
 print(f'example name:', NAMES[0] + '.' + EXTENSION)
-
 
 ###
 
