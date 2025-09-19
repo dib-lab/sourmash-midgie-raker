@@ -8,44 +8,67 @@ TAXLIST=['/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqld
 SKETCHES='../rename/bin-sketches.renamed.sig.zip'
 
 import glob, csv
+import sourmash
+from sourmash.sourmash_args import SaveSignaturesToLocation
+import collections
+
+db = sourmash.load_file_as_index(SKETCHES)
+mf = db.manifest
+
+IDENT_MD5 = {}
+for row in mf.rows:
+    if row['ksize'] == 51:
+        ident = row['name'].split(' ')[0]
+        IDENT_MD5[ident] = row['md5']
+
+print(f"loaded {len(IDENT_MD5)} from '{SKETCHES}'")
 
 rule all:
     input:
-        'multigather.d',
+        expand("gather.d/{ident}.gather.csv", ident=IDENT_MD5),
         'combined-gather.csv',
         'combined-gather.with-lineages.csv',
 
 
-# argh, bug https://github.com/sourmash-bio/sourmash/issues/3811
-rule downsample_sketches:
+checkpoint explode_zip:
     input:
-        SKETCHES,
+        sketches=SKETCHES,
     output:
-        'sketches.k51.sig.zip',
-    shell: """
-        sourmash sig downsample {input} -o {output} --scaled 10_000 -k 51
-    """
+        expand("gather.d/{ident}.sig.zip", ident=IDENT_MD5)
+    run:
+        # collect sketches by ident
+        print(f"loading from '{input[0]}'")
+        sketch_d = collections.defaultdict(list)
+        for ss in db.signatures():
+            ident = ss.name.split(' ')[0]
+            sketch_d[ident].append(ss)
 
+        # write out by ident
+        for ident, sigs in sketch_d.items():
+            fname = f'gather.d/{ident}.sig.zip'
+            print(f'writing {fname}')
+            with SaveSignaturesToLocation(fname) as save_sig:
+                save_sig.add_many(sigs)
 
-rule multigather:
+rule gather:
     input:
-        sketches='sketches.k51.sig.zip',
+        sketch='gather.d/{ident}.sig.zip',
         dblist=DBLIST,
     output:
-        protected(directory('multigather.d'))
+        csv=touch("gather.d/{ident}.gather.csv"),
+        txt="gather.d/{ident}.gather.out",
     shell: """
-        mkdir {output}
-        sourmash multigather --db {input.dblist} -k 51 --scaled 10_000 \
-            --query {input.sketches} --threshold-bp=0 --output-dir {output}
+        sourmash gather -k 51 --scaled 10_000 --threshold-bp=0 \
+            {input.sketch} {input.dblist} -o {output.csv} > {output.txt} || true
     """
 
 rule combine_csv:
     input:
-        'multigather.d',
+        expand("gather.d/{ident}.gather.csv", ident=IDENT_MD5)
     output:
         'combined-gather.csv'
     run:
-        filenames = glob.glob('multigather.d/*.csv')
+        filenames = input
         outfp = None
         w = None
         fieldnames = None
