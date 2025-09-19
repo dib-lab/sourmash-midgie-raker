@@ -29,19 +29,10 @@ import csv
 import sourmash
 
 
-def parse_raw_name(name):
-    "Parse name of bins, e.g. 'AtH2023_SRR17241613_MAG43' => study/metag/mag"
-    assert name.startswith('SHD1_')
-
-    study, mag = name.split('_')
-    return "SHD1", mag
-
-NAME_INFO = {}
 FILE_INFO = {}
 ORIG_NAME = {}
 for name in NAMES:
     ident = name.split(' ')[0]
-    NAME_INFO[ident] = parse_raw_name(name)
     FILE_INFO[ident] = RAW_GENOME_LOCATION + '/' + name + '.' + EXTENSION
     ORIG_NAME[ident] = name
 
@@ -119,7 +110,7 @@ rule process_csv:
 
         for n, row in enumerate(rows):
             ident = row['query_name'].split(' ')[0]
-            assert ident in NAME_INFO
+            assert ident in FILE_INFO
             found.add(ident)
 
             # calculate new ident, if desired
@@ -138,13 +129,11 @@ rule process_csv:
 
                     lin_w.writerow([new_ident] + lin)
 
-                    metag, mag = NAME_INFO[ident]
-                    new_name = f"{new_ident} {lin[-1]} ({metag}_{mag})"
+                    new_name = f"{new_ident} {lin[-1]} ({ident})"
 
             # if not, that's just fiiiine.
             if not classify_at_species:
-                metag, mag = NAME_INFO[ident]
-                new_name = f"{new_ident} unknown ({metag}_{mag})"
+                new_name = f"{new_ident} unknown ({ident})"
                 unclass_w.writerow([ident])
                 n_unclass += 1
 
@@ -172,8 +161,7 @@ rule process_csv:
                 else:
                     new_ident = f"{NEW_PREFIX}_MAG{n}"
 
-                metag, mag = NAME_INFO[ident]
-                new_name = f"{new_ident} unknown ({metag}_{mag})"
+                new_name = f"{new_ident} unknown ({ident})"
                 genomefile = FILE_INFO[ident]
                 rename_w.writerow([new_name, genomefile, ''])
                 
