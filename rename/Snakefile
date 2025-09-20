@@ -195,8 +195,9 @@ rule taxburst_genomes:
         sketches='bin-sketches.renamed.sig.zip',
         tax='bin-sketches.lineages.csv',
     output:
-        'bin-sketches.taxburst.html',
+        html='bin-sketches.taxburst.html',
+        json='bin-sketches.taxburst.json',
     shell: """
         ./build-sourmash-db-view.py {input.sketches} -t {input.tax} \
-           --max-rank-num=7 -o {output}
+           --max-rank-num=7 -o {output.html} --save-json {output.json}
     """
