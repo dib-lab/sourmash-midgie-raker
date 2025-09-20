@@ -1,9 +1,9 @@
 base:
- bin_location: '/home/ctbrown/scratch3/2025-dog-mags/data/'
- extension: 'fna.gz'
+ bin_location: '/group/ctbrowngrp2/amhorst/2025-pigparadigm/results/MAGs/all_genomes'
+ extension: 'fasta'
 
 rename:
- keep_original_ident: True
- new_prefix: xxx                # ignored if keep_original_names is True
+ keep_original_ident: False
+ new_prefix: AtH                # ignored if keep_original_names is True
 
 

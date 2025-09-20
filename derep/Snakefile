@@ -3,10 +3,13 @@
 
 SKETCHES = '../rename/bin-sketches.renamed.sig.zip'
 
+GTDB_DB = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
+GTDB_TAX = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqldb'
+
 rule all:
     input:
         'merged.x.sketches.gather.csv',
-
+        'merged.x.gtdb.k31.gather.csv',
 
 rule merge:
     input:
@@ -26,7 +29,7 @@ rule index:
         sourmash index -F rocksdb {output} {input} -k 31
     """
 
-rule gather:
+rule gather_merged_x_sketches:
     input:
         merge='merged.sig.zip',
         sketches='bin-sketches.k31.rocksdb',
@@ -35,5 +38,17 @@ rule gather:
     threads: 64
     shell: """
         sourmash gather -k 31 {input.merge} {input.sketches} \
+            --threshold-bp=0 -o {output}
+    """
+
+rule gather_merged_x_gtdb:
+    input:
+        merge='merged.sig.zip',
+        db=GTDB_DB,
+    output:
+        'merged.x.gtdb.k31.gather.csv',
+    threads: 64
+    shell: """
+        sourmash gather -k 31 {input.merge} {input.db} \
             --threshold-bp=0 -o {output}
     """
