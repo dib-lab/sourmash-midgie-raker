@@ -24,4 +24,4 @@ determining the size of the minimum set cover for each bin, and also
 calculating the novelty in each bin.
 
 Finally, the `bin-coverage` code will calculate coverage histograms
-for selection MAG x metagenome comparisons.
+for selected MAG x metagenome comparisons.

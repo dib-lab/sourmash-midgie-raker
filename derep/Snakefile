@@ -41,6 +41,8 @@ rule gather_merged_x_sketches:
             --threshold-bp=0 -o {output}
     """
 
+# CTB: could easily do scaled=10k to speed this up... or make threshold-bp
+# larger.
 rule gather_merged_x_gtdb:
     input:
         merge='merged.sig.zip',
