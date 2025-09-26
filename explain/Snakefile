@@ -22,5 +22,5 @@ rule gather:
     threads: 1
     shell: """
         sourmash gather {input} {GTDB_DB} {SKETCH_ROCKSDB} -o {output} \
-           -k 31 --threshold-bp=0
+           -k 31 --threshold-bp=0 --scaled 10_000
     """
