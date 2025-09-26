@@ -10,6 +10,7 @@ rule all:
     input:
         'merged.x.sketches.gather.csv',
         'merged.x.gtdb.k31.gather.csv',
+        'merged.x.gtdb.k31.gather.with-lineages.csv',
 
 rule merge:
     input:
@@ -53,4 +54,14 @@ rule gather_merged_x_gtdb:
     shell: """
         sourmash gather -k 31 {input.merge} {input.db} \
             --threshold-bp=0 -o {output}
+    """
+
+rule sourmash_tax:
+    input:
+        csv='merged.x.gtdb.k31.gather.csv',
+        tax=GTDB_TAX,
+    output:
+        'merged.x.gtdb.k31.gather.with-lineages.csv',
+    shell: """
+        sourmash tax annotate -t {input.tax} -g {input.csv}
     """
