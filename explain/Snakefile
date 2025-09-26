@@ -1,0 +1,26 @@
+GTDB_DB = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
+
+SKETCH_ROCKSDB='../derep/bin-sketches.k31.rocksdb'
+
+METAGS=[
+    "SRR11125249",
+    "SRR12795785",
+    "SRR15057925",
+    "SRR15057930",
+    "SRR5241537",
+]
+
+rule all:
+    input:
+        expand("{metag}.gather.csv", metag=METAGS)
+
+rule gather:
+    input:
+        "metags/{metag}.trim.sig.zip"
+    output:
+        "{metag}.gather.csv"
+    threads: 1
+    shell: """
+        sourmash gather {input} {GTDB_DB} {SKETCH_ROCKSDB} -o {output} \
+           -k 31 --threshold-bp=0 --scaled 10_000
+    """
