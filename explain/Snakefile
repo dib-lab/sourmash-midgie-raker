@@ -12,7 +12,7 @@ METAGS=[
 
 rule all:
     input:
-        expand("{metag}.gather.csv", metag=METAGS),
+        expand("{metag}.gtdb+bins.gather.csv", metag=METAGS),
         expand("{metag}.gtdb-only.gather.csv", metag=METAGS),
         expand("{metag}.bins-only.gather.csv", metag=METAGS),
 
@@ -20,7 +20,7 @@ rule gather:
     input:
         "metags/{metag}.trim.sig.zip"
     output:
-        "{metag}.gather.csv"
+        "{metag}.gtdb+bins.gather.csv"
     threads: 1
     shell: """
         sourmash gather {input} {GTDB_DB} {SKETCH_ROCKSDB} -o {output} \
