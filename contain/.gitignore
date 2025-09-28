@@ -1,1 +1,4 @@
-*.csv
+picklists
+manifests
+results
+metags.mf.csv
