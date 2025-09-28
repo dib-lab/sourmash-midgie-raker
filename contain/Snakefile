@@ -1,0 +1,44 @@
+MAGS, = glob_wildcards('{mag}.topN.pl.csv')
+
+GTDB_ZIP = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.zip'
+
+print(f'found {len(MAGS)} MAGs')
+
+METAGS = ["SRR11125249"]
+
+##  ./make-top-picklist.py ../min-set-cov/sketches.x.gtdb.fastgather.csv
+
+rule all:
+    input:
+        expand('{ident}.topN.manysearch.csv', ident=MAGS)
+
+rule check:
+    input:
+        '{ident}.topN.pl.csv',
+    output:
+        '{ident}.topN.mf.csv',
+    shell: """
+        sourmash sig check -m {output} -F csv --picklist {input}:ident:ident \
+             ../rename/bin-sketches.renamed.sig.zip {GTDB_ZIP} \
+             -k 31 --abspath        
+    """
+
+rule collect_metags:
+    input:
+        expand('../explain/metags/{name}.trim.sig.zip', name=METAGS)
+    output:
+        'metags.mf.csv',
+    shell:
+        "sourmash sig collect {input} -o {output} -F csv --abspath"
+
+rule manysearch:
+    input:
+        query_mf='{ident}.topN.mf.csv',
+        metags='metags.mf.csv',
+    output:
+        '{ident}.topN.manysearch.csv',
+    threads: 4
+    shell: """
+        sourmash scripts manysearch -c {threads} -t 0 \
+           {input.query_mf} {input.metags} -o {output}
+    """
