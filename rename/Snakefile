@@ -17,6 +17,10 @@ SKETCHES='../sketch-raw/bin-sketches.sig.zip'
 
 GTDB_DB = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
 GTDB_TAX = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqldb'
+GTDB_TK_OUTPUT = [
+    'gtdbtk/archeael_tax.gtdbtk.novel.tsv',
+    'gtdbtk/bacterial_tax.gtdbtk.novel.tsv',
+    ]
 
 RANKS = 'superkingdom,phylum,class,order,family,genus,species'.split(',')
 
@@ -47,6 +51,15 @@ rule all:
         'manysketch-renamed.csv',
         'bin-sketches.renamed.sig.zip',
         'bin-sketches.taxburst.html',
+
+rule custom_lineages_from_gtdbtk:
+    params:
+        gtdbtk_tsv=GTDB_TK_OUTPUT,
+    output:
+        'raw-sketch.custom-lineages.csv'
+    shell: """
+        ./process-gtdbtk.py {params.gtdbtk_tsv} --allow-empty -o {output}
+    """
 
 
 rule gather_raw_sketches:
@@ -85,15 +98,28 @@ rule process_csv:
     input:
         classify='raw-sketch-gather.classifications.csv',
         sketches=SKETCHES,
+        custom='raw-sketch.custom-lineages.csv',
     output:
         lineages='bin-sketches.lineages.csv',
         unclass='raw-sketch.unclassified.csv',
         rename='manysketch-renamed.csv',
     run:
+        classify_d = {}
         with open(input.classify, 'r', newline='') as fp:
             r = csv.DictReader(fp)
+            for row in r:
+                ident = row['query_name'].split(' ')[0]
+                classify_d[ident] = row
 
-            rows = list(r)
+        with open(input.custom, 'r', newline='') as fp:
+            r = csv.DictReader(fp)
+            custom_rows = list(r)
+
+            for row in custom_rows:
+                ident = row['ident']
+                row_d = dict(query_name=ident, lineage=row['lineage'],
+                             status='match')
+                classify_d[ident] = row_d
 
         lin_w = csv.writer(open(output.lineages, 'w', newline=''))
         lin_w.writerow(['ident'] + RANKS)
@@ -108,9 +134,9 @@ rule process_csv:
         n_classify = 0
         n_unclass = 0
 
-        for n, row in enumerate(rows):
-            ident = row['query_name'].split(' ')[0]
+        for n, (ident, row) in enumerate(classify_d.items()):
             assert ident in FILE_INFO
+            assert ident not in found, ident
             found.add(ident)
 
             # calculate new ident, if desired
