@@ -2,7 +2,7 @@ GTDB_DB = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rock
 
 SKETCH_ROCKSDB='../derep/bin-sketches.k31.rocksdb'
 
-METAGS=[
+HI_LO_METAGS=[
     "SRR11125249",
     "SRR12795785",
     "SRR15057925",
@@ -10,17 +10,32 @@ METAGS=[
     "SRR5241537",
 ]
 
+RANDOM_10_METAGS=[
+    "ERR3211879",
+    "SRR8960250",
+    "SRR8960946",
+    "SRR11126399",
+    "SRR8960141",
+    "SRR11125447",
+    "SRR12795789",
+    "ERR8314788",
+    "SRR11126199",
+    "SRR11125672",
+]
+
+METAGS=RANDOM_10_METAGS
+
 rule all:
     input:
-        expand("{metag}.gather.csv", metag=METAGS),
+        expand("{metag}.gtdb+bins.gather.csv", metag=METAGS),
         expand("{metag}.gtdb-only.gather.csv", metag=METAGS),
         expand("{metag}.bins-only.gather.csv", metag=METAGS),
 
 rule gather:
     input:
-        "metags/{metag}.trim.sig.zip"
+        "metags/{metag}.sig"
     output:
-        "{metag}.gather.csv"
+        "{metag}.gtdb+bins.gather.csv"
     threads: 1
     shell: """
         sourmash gather {input} {GTDB_DB} {SKETCH_ROCKSDB} -o {output} \
@@ -29,7 +44,7 @@ rule gather:
 
 rule gather_bins:
     input:
-        "metags/{metag}.trim.sig.zip"
+        "metags/{metag}.sig"
     output:
         "{metag}.bins-only.gather.csv"
     threads: 1
@@ -40,7 +55,7 @@ rule gather_bins:
 
 rule gather_gtdb:
     input:
-        "metags/{metag}.trim.sig.zip"
+        "metags/{metag}.sig"
     output:
         "{metag}.gtdb-only.gather.csv"
     threads: 1
