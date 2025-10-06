@@ -16,7 +16,7 @@ and sketches them with `sourmash scripts manysketch`.
 Then, move on to `rename`, which takes the sketches, builds taxonomic
 profiles of them with `gather` against GTDB, and renames them consistently.
 
-Next, run `decontam`, which profiles the sketches against eukaryotes + GTDB,
+*Next, run `decontam`, which profiles the sketches against eukaryotes + GTDB,
 and flags bins that contain substantial amounts of multi-class content.
 
 Then, run `min-set-cov`. This profiles the bins against GTDB,

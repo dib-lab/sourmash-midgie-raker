@@ -3,9 +3,6 @@ RAW_GENOME_LOCATION=config.get('base')['bin_location'].rstrip('/')
 EXTENSION=config.get('base')['extension']
 RAW_NAMES, = glob_wildcards(RAW_GENOME_LOCATION + '/' + '{name}' + '.' + EXTENSION)
 
-if TEST_MODE_SUBSAMPLE:
-    RAW_NAMES=RAW_NAMES[:5]
-
 print('using bin location:', RAW_GENOME_LOCATION)
 print('using bin extension:', EXTENSION)
 print(f'found {len(RAW_NAMES)} raw genomes.')

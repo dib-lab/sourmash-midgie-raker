@@ -122,18 +122,11 @@ rule rename_process_csv:
         n_classify = 0
         n_unclass = 0
 
-        # limit to what was sketched if in test mode
-        if TEST_MODE_SUBSAMPLE:
-            db = sourmash.load_file_as_index(input.sketches)
-            mf = db.manifest
-            idents = set( (row['name'].split(' ')[0] for row in mf.rows ) )
-            classify_d_sub = {}
-            for ident in idents:
-                classify_d_sub[ident] = classify_d[ident]
-            classify_d = classify_d_sub
-
         for n, (ident, row) in enumerate(classify_d.items()):
-            assert ident in FILE_INFO
+            if ident not in FILE_INFO:
+                print(f'WARNING: we appear to have information about more bins than we found!? specifically: {ident}')
+                continue
+
             assert ident not in found, ident
             found.add(ident)
 
@@ -197,9 +190,8 @@ rule rename_process_csv:
         print(f'found: {len(found)}')
         print(f'names: {len(NAMES)}')
 
-        if not TEST_MODE_SUBSAMPLE:
-            assert n_unclass + n_classify == len(NAMES), "are we missing something? (msg 1)?"
-            assert len(found) == len(NAMES), "are we missing something (msg 2)?"
+        assert n_unclass + n_classify == len(NAMES), "are we missing something? (msg 1)?"
+        assert len(found) == len(NAMES), "are we missing something (msg 2)?"
 
 
 rule rename_sketch:
