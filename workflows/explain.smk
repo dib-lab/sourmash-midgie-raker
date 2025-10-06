@@ -18,11 +18,12 @@ rule explain_gather:
         q="inputs/metags/{metag}.sig",
         rocksdb=OUTPUTS+'/bin-sketches.k31.rocksdb',
     output:
-        OUTPUTS+"/explain/{metag}.gtdb+bins.gather.csv"
+        csv=OUTPUTS+"/explain/{metag}.gtdb+bins.gather.csv",
+        txt=OUTPUTS+"/explain/{metag}.gtdb+bins.gather.out",
     threads: 1
     shell: """
-        sourmash gather {input.q} {GTDB_DB} {input.rocksdb} -o {output} \
-           -k 31 --threshold-bp=0 --scaled 10_000
+        sourmash gather {input.q} {GTDB_DB} {input.rocksdb} -o {output.csv} \
+           -k 31 --threshold-bp=0 --scaled 10_000 >& {output.txt}
     """
 
 rule explain_gather_bins:
@@ -30,20 +31,22 @@ rule explain_gather_bins:
         q="inputs/metags/{metag}.sig",
         rocksdb=OUTPUTS+'/bin-sketches.k31.rocksdb',
     output:
-        OUTPUTS+"/explain/{metag}.bins-only.gather.csv"
+        csv=OUTPUTS+"/explain/{metag}.bins-only.gather.csv",
+        txt=OUTPUTS+"/explain/{metag}.bins-only.gather.out",
     threads: 1
     shell: """
-        sourmash gather {input.q} {input.rocksdb} -o {output} \
-           -k 31 --threshold-bp=0 --scaled 10_000
+        sourmash gather {input.q} {input.rocksdb} -o {output.csv} \
+           -k 31 --threshold-bp=0 --scaled 10_000 >& {output.txt}
     """
 
 rule explain_gather_gtdb:
     input:
         "inputs/metags/{metag}.sig"
     output:
-        OUTPUTS+"/explain/{metag}.gtdb-only.gather.csv"
+        csv=OUTPUTS+"/explain/{metag}.gtdb-only.gather.csv",
+        txt=OUTPUTS+"/explain/{metag}.gtdb-only.gather.out"
     threads: 1
     shell: """
-        sourmash gather {input} {GTDB_DB} -o {output} \
-           -k 31 --threshold-bp=0 --scaled 10_000
+        sourmash gather {input} {GTDB_DB} -o {output.csv} \
+           -k 31 --threshold-bp=0 --scaled 10_000 >& {output.txt}
     """
