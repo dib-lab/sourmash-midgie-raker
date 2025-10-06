@@ -8,7 +8,17 @@ print(f'found {len(MAGS)} MAGs')
 
 rule contain:
     input:
+        expand(OUTPUTS + '/contain/results/{ident}.topN.manysearch.csv', ident=MAGS),
+        OUTPUTS+'/contain/summary.csv'
+
+rule summarize:
+    input:
         expand(OUTPUTS + '/contain/results/{ident}.topN.manysearch.csv', ident=MAGS)
+    output:
+        OUTPUTS+'/contain/summary.csv'
+    shell: """
+        ./scripts/summarize-contain.py {input} -o {output}
+    """
 
 rule contain_check:
     input:
