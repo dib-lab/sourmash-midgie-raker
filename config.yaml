@@ -1,6 +1,8 @@
 base:
  bin_location: '/group/ctbrowngrp2/amhorst/2025-pigparadigm/results/MAGs/all_genomes'
  extension: 'fasta'
+ outputs: 'outputs.ath'
+ subsample: True                # test mode
 
 rename:
  keep_original_ident: False
