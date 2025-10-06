@@ -114,7 +114,9 @@ rule process_gather_csvs2_wc:
         OUTPUTS+'/min-set-cov/sketches.x.gtdb.fastgather.d/{ident}.gather.csv',
     output:
         OUTPUTS+'/min-set-cov/sketches.x.gtdb.fastgather.d/{ident}.gather.with-lineages.csv',
+    params:
+        outdir=OUTPUTS+'/min-set-cov/sketches.x.gtdb.fastgather.d'
     shell: """
         sourmash tax annotate -g {input} -t {GTDB_TAX} \
-           -o sketches.x.gtdb.fastgather.d
+           -o {params.outdir}
     """
