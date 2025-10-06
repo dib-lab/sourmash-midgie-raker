@@ -1,6 +1,6 @@
 MAGS, = glob_wildcards(OUTPUTS+'/contain/picklists/{mag}.topN.pl.csv')
 
-print(f'found {len(MAGS)} MAGs')
+print(f'contain: found {len(MAGS)} picklists. Did you run "make-top-picklist.py" (rule contain_make_picklists)?')
 
 ## cd outputs.test/contain/picklists
 ## ../../../scripts/make-top-picklist.py ../../min-set-cov/sketches.x.gtdb.fastgather.csv
@@ -9,7 +9,14 @@ print(f'found {len(MAGS)} MAGs')
 rule contain:
     input:
         expand(OUTPUTS + '/contain/results/{ident}.topN.manysearch.csv', ident=MAGS),
-        OUTPUTS+'/contain/summary.csv'
+        OUTPUTS+'/contain/summary.csv',
+
+rule contain_make_picklists:
+    shell: """
+        mkdir -p {OUTPUTS}/contain/picklists
+        cd {OUTPUTS}/contain/picklists
+        ../../../scripts.make-top-picklist.py ../../min-set-cov/sketches.x.gtdb.fastgather.csv
+    """
 
 rule summarize:
     input:
