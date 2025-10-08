@@ -1,7 +1,7 @@
 import pprint
 
-configfile: 'databases.yaml'
-configfile: 'config.yaml'
+configfile: 'defaults.yaml'
+configfile: 'config.yaml'       # disable eventually...
 pprint.pprint(config)
             
 OUTPUTS=config.get('base')['outputs'].rstrip('/')

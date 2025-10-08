@@ -1,0 +1,18 @@
+base:
+ bin_location: 'test-data/'
+ extension: 'fasta.gz'
+ outputs: 'outputs.test'
+
+rename:
+ new_prefix: AtH0                # ignored if keep_original_names is True
+# gtdbtk_classify:
+#    - inputs.ath/gtdbtk/archaeal_tax.gtdbtk.novel.2.tsv
+#    - inputs.ath/gtdbtk/archaeal_tax.gtdbtk.novel.tsv
+#    - inputs.ath/gtdbtk/bacterial_tax.gtdbtk.novel.2.tsv
+#    - inputs.ath/gtdbtk/bacterial_tax.gtdbtk.novel.tsv
+
+###
+
+rarefy:
+ ksizes: [31,]
+ scaled: [10_000,]

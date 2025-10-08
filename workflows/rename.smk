@@ -111,13 +111,16 @@ rule rename_process_csv:
                              status='match')
                 classify_d[ident] = row_d
 
-        lin_w = csv.writer(open(output.lineages, 'w', newline=''))
+        lin_fp = open(output.lineages, 'w', newline='')
+        lin_w = csv.writer(lin_fp)
         lin_w.writerow(['ident'] + RANKS)
 
-        unclass_w = csv.writer(open(output.unclass, 'w', newline=''))
+        unclass_fp = open(output.unclass, 'w', newline='')
+        unclass_w = csv.writer(unclass_fp)
         unclass_w.writerow(['ident'])
 
-        rename_w = csv.writer(open(output.rename, 'w', newline=''))
+        rename_fp = open(output.rename, 'w', newline='')        
+        rename_w = csv.writer(rename_fp)
         rename_w.writerow(['name', 'genome_filename', 'protein_filename'])
 
         found = set()
@@ -195,6 +198,9 @@ rule rename_process_csv:
         assert n_unclass + n_classify == len(NAMES), "are we missing something? (msg 1)?"
         assert len(found) == len(NAMES), "are we missing something (msg 2)?"
 
+        rename_fp.close()
+        lin_fp.close()
+        unclass_fp.close()
 
 rule rename_sketch:
     input:
