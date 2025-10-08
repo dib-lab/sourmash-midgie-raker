@@ -210,3 +210,6 @@ __marimo__/
 .snakemake
 outputs.*
 inputs/
+*.yaml
+*.zip
+*.csv
