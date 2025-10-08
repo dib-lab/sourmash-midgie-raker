@@ -7,8 +7,15 @@ through trash heaps looking for good stuff.)
 
 ## The layout
 
-midgie-raker is organized in a series of directories, each with their own
-snakemake workflow.
+midgie-raker is organized as a snakemake workflow, with the top level
+rules being in `Snakefile`.
+
+First, edit `config.yaml` and `databases.yaml` appropriately for your system
+and bins.
+
+Then, `snakemake -j 64 rename` will get you started.
+
+## Old layout info, to be swizzled:
 
 Start with `sketch-raw`, which takes a bunch of FASTA files of MAGs
 and sketches them with `sourmash scripts manysketch`.
