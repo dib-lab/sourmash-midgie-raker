@@ -69,8 +69,9 @@ def main():
                 "cumulative_kmers": new_total
             })
 
-    if all_hashes.n_occupied() > 0.3 * args.nodegraph_size:
-       print('WARNING:', all_hashes.n_occupied())
+    if all_hashes.n_occupied() > 0.2 * args.nodegraph_size:
+       print('WARNING: individual nodegraphs have high occupancy', all_hashes.n_occupied())
+       sys.exit(-1)
 
     # Convert to pandas DataFrame
     df = pd.DataFrame(all_results)

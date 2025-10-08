@@ -66,3 +66,12 @@ include: "workflows/contain.smk"
 
 # run explainability analysis
 include: "workflows/explain.smk"
+
+# run rarefaction curve on bins
+include: "workflows/rarefy.smk"
+
+rule stage1_fast:
+    input:
+        rules.sketch_raw.input,
+        rules.rename.input,
+        rules.rarefaction.input,
