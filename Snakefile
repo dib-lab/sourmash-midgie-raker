@@ -70,6 +70,8 @@ include: "workflows/explain.smk"
 # run rarefaction curve on bins
 include: "workflows/rarefy.smk"
 
+## summary rules for convenience:
+
 rule stage1_fast:
     input:
         rules.sketch_raw.input,

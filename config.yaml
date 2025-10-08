@@ -6,3 +6,9 @@ base:
 rename:
  keep_original_ident: False
  new_prefix: AtH0                # ignored if keep_original_names is True
+
+###
+
+rarefy:
+ ksizes: [21, 31, 51]
+ scaled: [1000, 5000, 10_000, 50_000, 100_000]
