@@ -1,8 +1,4 @@
-import pprint
-
-configfile: '../config.yaml'
-print('config from ../config.yaml is:')
-pprint.pprint(config)
+# rename the raw bins into something sensible, if desired
 
 RAW_GENOME_LOCATION=config.get('base')['bin_location'].rstrip('/')
 EXTENSION=config.get('base')['extension']
@@ -13,25 +9,17 @@ print('using bin extension:', EXTENSION)
 print(f'found {len(NAMES)} raw genomes.')
 print(f'example name:', NAMES[0] + '.' + EXTENSION)
 
-SKETCHES='../sketch-raw/bin-sketches.sig.zip'
-
-GTDB_DB = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
-GTDB_TAX = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqldb'
-GTDB_TK_OUTPUT = [
-    'gtdbtk/archeael_tax.gtdbtk.novel.tsv',
-    'gtdbtk/bacterial_tax.gtdbtk.novel.tsv',
-    ]
-
-RANKS = 'superkingdom,phylum,class,order,family,genus,species'.split(',')
+SKETCHES=OUTPUTS+'/raw/bin-sketches.sig.zip'
 
 KEEP_ORIGINAL_IDENT=config.get('rename')['keep_original_ident']
 NEW_PREFIX=config.get('rename')['new_prefix']
+
+GTDB_TK_OUTPUT = config.get('rename').get('gtdbtk_classify', [])
 
 ###
 
 import csv
 import sourmash
-
 
 FILE_INFO = {}
 ORIG_NAME = {}
@@ -41,32 +29,32 @@ for name in NAMES:
     ORIG_NAME[ident] = name
 
 
-rule all:
+rule rename:
     input:
-        'raw-sketch-gather.csv',
-        'raw-sketch-gather.with-lineages.csv',
-        'raw-sketch-gather.classifications.csv',
-        'bin-sketches.lineages.csv',
-        'raw-sketch.unclassified.csv',
-        'manysketch-renamed.csv',
-        'bin-sketches.renamed.sig.zip',
-        'bin-sketches.taxburst.html',
+        OUTPUTS+'/rename/raw-sketch-gather.csv',
+        OUTPUTS+'/rename/raw-sketch-gather.with-lineages.csv',
+        OUTPUTS+'/rename/raw-sketch-gather.classifications.csv',
+        OUTPUTS+'/rename/bin-sketches.lineages.csv',
+        OUTPUTS+'/rename/raw-sketch.unclassified.csv',
+        OUTPUTS+'/rename/manysketch-renamed.csv',
+        OUTPUTS+'/rename/bin-sketches.renamed.sig.zip',
+        OUTPUTS+'/rename/bin-sketches.taxburst.html',
 
-rule custom_lineages_from_gtdbtk:
+rule rename_custom_lineages_from_gtdbtk:
     params:
         gtdbtk_tsv=GTDB_TK_OUTPUT,
     output:
-        'raw-sketch.custom-lineages.csv'
+        OUTPUTS+'/rename/raw-sketch.custom-lineages.csv'
     shell: """
-        ./process-gtdbtk.py {params.gtdbtk_tsv} --allow-empty -o {output}
+        ./scripts/process-gtdbtk.py {params.gtdbtk_tsv} --allow-empty -o {output}
     """
 
 
-rule gather_raw_sketches:
+rule rename_gather_raw_sketches:
     input:
         SKETCHES
     output:
-        'raw-sketch-gather.csv',
+        OUTPUTS+'/rename/raw-sketch-gather.csv',
     threads: 1                  # against rocksdb, yah?
     shell: """
         sourmash scripts fastmultigather {input} {GTDB_DB} \
@@ -74,35 +62,37 @@ rule gather_raw_sketches:
            -o {output} -c {threads}
     """
 
-rule tax_annotate:
+rule rename_tax_annotate:
     input:
-        'raw-sketch-gather.csv',
+        OUTPUTS+'/rename/raw-sketch-gather.csv',
     output:
-        'raw-sketch-gather.with-lineages.csv',
+        OUTPUTS+'/rename/raw-sketch-gather.with-lineages.csv',
+    params:
+        dir=OUTPUTS+'/rename',
     shell: """
-        sourmash tax annotate -g {input} -t {GTDB_TAX}
+        sourmash tax annotate -g {input} -t {GTDB_TAX} -o {params.dir}
     """
 
-rule tax_genome:
+rule rename_tax_genome:
     input:
-        'raw-sketch-gather.csv',
+        OUTPUTS+'/rename/raw-sketch-gather.csv',
     output:
-        'raw-sketch-gather.classifications.csv'
+        OUTPUTS+'/rename/raw-sketch-gather.classifications.csv'
     params:
-        prefix='raw-sketch-gather',
+        prefix=OUTPUTS+'/rename/raw-sketch-gather',
     shell: """
         sourmash tax genome -g {input} -t {GTDB_TAX} -o {params.prefix}
     """
 
-rule process_csv:
+rule rename_process_csv:
     input:
-        classify='raw-sketch-gather.classifications.csv',
+        classify=OUTPUTS+'/rename/raw-sketch-gather.classifications.csv',
         sketches=SKETCHES,
-        custom='raw-sketch.custom-lineages.csv',
+        custom=OUTPUTS+'/rename/raw-sketch.custom-lineages.csv',
     output:
-        lineages='bin-sketches.lineages.csv',
-        unclass='raw-sketch.unclassified.csv',
-        rename='manysketch-renamed.csv',
+        lineages=OUTPUTS+'/rename/bin-sketches.lineages.csv',
+        unclass=OUTPUTS+'/rename/raw-sketch.unclassified.csv',
+        rename=OUTPUTS+'/rename/manysketch-renamed.csv',
     run:
         classify_d = {}
         with open(input.classify, 'r', newline='') as fp:
@@ -135,7 +125,10 @@ rule process_csv:
         n_unclass = 0
 
         for n, (ident, row) in enumerate(classify_d.items()):
-            assert ident in FILE_INFO
+            if ident not in FILE_INFO:
+                print(f'WARNING: we appear to have information about more bins than we found!? specifically: {ident}')
+                continue
+
             assert ident not in found, ident
             found.add(ident)
 
@@ -203,11 +196,11 @@ rule process_csv:
         assert len(found) == len(NAMES), "are we missing something (msg 2)?"
 
 
-rule sketch:
+rule rename_sketch:
     input:
-        'manysketch-renamed.csv',
+        OUTPUTS+'/rename/manysketch-renamed.csv',
     output:
-        'bin-sketches.renamed.sig.zip',
+        OUTPUTS+'/rename/bin-sketches.renamed.sig.zip',
     threads: 64
     params:
         sketchtype="dna,k=21,k=31,k=51"
@@ -216,14 +209,14 @@ rule sketch:
             -p {params.sketchtype}
     """
 
-rule taxburst_genomes:
+rule rename_taxburst_genomes:
     input:
-        sketches='bin-sketches.renamed.sig.zip',
-        tax='bin-sketches.lineages.csv',
+        sketches=OUTPUTS+'/rename/bin-sketches.renamed.sig.zip',
+        tax=OUTPUTS+'/rename/bin-sketches.lineages.csv',
     output:
-        html='bin-sketches.taxburst.html',
-        json='bin-sketches.taxburst.json',
+        html=OUTPUTS+'/rename/bin-sketches.taxburst.html',
+        json=OUTPUTS+'/rename/bin-sketches.taxburst.json',
     shell: """
-        ./build-sourmash-db-view.py {input.sketches} -t {input.tax} \
+        ./scripts/build-sourmash-db-view.py {input.sketches} -t {input.tax} \
            --max-rank-num=7 -o {output.html} --save-json {output.json}
     """
