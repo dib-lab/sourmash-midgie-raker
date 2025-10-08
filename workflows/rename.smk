@@ -14,6 +14,8 @@ SKETCHES=OUTPUTS+'/raw/bin-sketches.sig.zip'
 KEEP_ORIGINAL_IDENT=config.get('rename')['keep_original_ident']
 NEW_PREFIX=config.get('rename')['new_prefix']
 
+GTDB_TK_OUTPUT = config.get('rename').get('gtdbtk_classify', [])
+
 ###
 
 import csv

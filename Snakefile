@@ -1,21 +1,17 @@
 import pprint
 
+configfile: 'databases.yaml'
 configfile: 'config.yaml'
 pprint.pprint(config)
             
 OUTPUTS=config.get('base')['outputs'].rstrip('/')
+GTDB_DB=config.get('databases')['gtdb_rocksdb']
+GTDB_TAX=config.get('databases')['gtdb_tax']
+GTDB_ZIP=config.get('databases')['gtdb_zip']
 
 ###
 
 # @CTB move to config:
-GTDB_DB = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
-GTDB_TAX = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqldb'
-GTDB_TK_OUTPUT = [
-    'inputs/gtdbtk/archeael_tax.gtdbtk.novel.tsv',
-    'inputs/gtdbtk/bacterial_tax.gtdbtk.novel.tsv',
-    ]
-
-GTDB_ZIP = '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.zip'
 
 METAGS=[                        # for explain
     "SRR11125249",
