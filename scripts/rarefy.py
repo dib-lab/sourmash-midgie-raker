@@ -22,6 +22,7 @@ def main():
 
     # Parameters
     ksize = args.ksize
+    scaled = args.scaled
     n_iterations = args.num_iterations
 
     # load sketches
@@ -32,7 +33,7 @@ def main():
         print(f'found {len(db)} sketches at k={ksize} - loading as signatures now.')
         for ss in db.signatures():
             with ss.update() as ss:
-                ss.minhash = ss.minhash.downsample(scaled=args.scaled)
+                ss.minhash = ss.minhash.downsample(scaled=scaled)
             sketches.append(ss)
 
             if len(sketches) % 100 == 0:
@@ -64,9 +65,8 @@ def main():
             all_results.append({
                 "iteration": iteration,
                 "position": position,
-                "sample": ss.name,
-                "new_kmers": new_kmers,
-                "cumulative_kmers": new_total
+                "new_kmers": new_kmers * scaled,
+                "cumulative_kmers": new_total * scaled
             })
 
     if all_hashes.n_occupied() > 0.2 * args.nodegraph_size:
