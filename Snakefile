@@ -66,6 +66,9 @@ include: "workflows/explain.smk"
 # run rarefaction curve on bins
 include: "workflows/rarefy.smk"
 
+# build pangenome databases
+include: "workflows/pangenome.smk"
+
 ## summary rules for convenience:
 
 rule stage1_fast:
