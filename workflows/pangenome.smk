@@ -1,7 +1,7 @@
-rule pangenomes:
+rule pangenomedb:
     input:
         OUTPUTS+'/rename/gtdb+bins.species.sig.zip',
-        OUTPUTS+'/rename/gtdb.species.sig.zip',
+        SHARED+'/gtdb.species.sig.zip',
 
 rule gtdb_bins_mf:
     input:
@@ -30,7 +30,7 @@ rule gtdb_species_pangenome:
         zip=GTDB_ZIP,
         tax=GTDB_TAX,
     output:
-        OUTPUTS+'/rename/gtdb.species.sig.zip',
+        SHARED+'/gtdb.species.sig.zip',
     shell: """
         sourmash scripts pangenome_createdb {input.zip} -t {input.tax} \
            -k 31 -o {output}

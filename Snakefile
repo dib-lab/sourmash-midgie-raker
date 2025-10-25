@@ -5,6 +5,7 @@ configfile: 'config.yaml'       # disable eventually...
 pprint.pprint(config)
             
 OUTPUTS=config.get('base')['outputs'].rstrip('/')
+SHARED=config.get('shared', 'common').rstrip('/')
 GTDB_DB=config.get('databases')['gtdb_rocksdb']
 GTDB_TAX=config.get('databases')['gtdb_tax']
 GTDB_ZIP=config.get('databases')['gtdb_zip']
