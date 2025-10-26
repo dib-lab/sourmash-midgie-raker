@@ -1,9 +1,9 @@
 import pprint
 
 configfile: 'defaults.yaml'
-configfile: 'config.yaml'       # disable eventually...
+# NOTE: _must_ specify an additional config file.
 pprint.pprint(config)
-            
+
 OUTPUTS=config.get('base')['outputs'].rstrip('/')
 SHARED=config.get('shared', 'common').rstrip('/')
 GTDB_DB=config.get('databases')['gtdb_rocksdb']

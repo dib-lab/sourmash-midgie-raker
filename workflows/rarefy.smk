@@ -10,7 +10,8 @@ SCALED=config.get('rarefy', {}).get('scaled', DEFAULT_SCALED)
 
 rule rarefaction:
     input:
-        expand(OUTPUTS+'/rarefy/rarefaction.k{k}.s{s}.csv', k=KSIZES, s=SCALED)
+        expand(OUTPUTS+'/rarefy/rarefaction.k{k}.s{s}.csv', k=KSIZES, s=SCALED),
+        expand(OUTPUTS+'/rarefy/explain.{m}.k31.csv', m=METAGS),
 
 rule make_rarefy:
     input:
@@ -21,4 +22,15 @@ rule make_rarefy:
         ./scripts/rarefy.py {input} -k {wildcards.ksize} \
             --scaled {wildcards.scaled} -o {output} \
             --nodegraph-size {NODEGRAPH_SIZE}
+    """
+
+rule metag_explain_curve:
+    input:
+        metag="inputs/metags/{m}.trim.sig.zip",
+        db=SKETCHES,
+    output:
+        OUTPUTS+'/rarefy/explain.{m}.k31.csv'
+    shell: """
+        scripts/rarefy-explainability.py --metagenomes {input.metag} \
+           --db {input.db} --scaled=10_000 -o {output}
     """
