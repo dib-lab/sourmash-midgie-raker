@@ -2,6 +2,7 @@ rule pangenomedb:
     input:
         OUTPUTS+'/rename/gtdb+bins.species.sig.zip',
         SHARED+'/gtdb.species.sig.zip',
+        SHARED+'/gtdb-merged.species.sig.zip',
 
 rule gtdb_bins_mf:
     input:
@@ -34,4 +35,14 @@ rule gtdb_species_pangenome:
     shell: """
         sourmash scripts pangenome_createdb {input.zip} -t {input.tax} \
            -k 31 -o {output}
+    """
+
+rule gtdb_merged_species_pangenome:
+    input:
+        SHARED+'/gtdb.species.sig.zip',
+    output:
+        SHARED+'/gtdb-merged.species.sig.zip',
+    shell: """
+        sourmash sig downsample {input} --scaled=10_000 | sourmash sig merge - \
+            -o {output} --set-name gtdb-merged
     """

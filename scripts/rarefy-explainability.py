@@ -15,11 +15,21 @@ def main():
     p.add_argument('--db', nargs='+')
     p.add_argument('--scaled', default=1000, type=int)
     p.add_argument('-k', '--ksize', default=31)
-    p.add_argument('--nodegraph-size', type=int, default=10_000_000)
+    p.add_argument('--nodegraph-size', type=int, default=1_000_000_000)
     p.add_argument('--nodegraph-num', type=int, default=4)
     p.add_argument('-N', '--num-iterations', type=int, default=10)
     p.add_argument('-o', '--output', required=True)
+    p.add_argument('--preload')
     args = p.parse_args()
+
+    preload_mh = None
+    if args.preload:
+        print(f'loading preload from {args.preload}')
+
+        sigs = sourmash.load_file_as_signatures(args.preload, ksize=args.ksize)
+        sigs = list(sigs)
+        assert len(sigs) == 1
+        preload_mh = sigs[0].minhash.downsample(scaled=args.scaled)
 
     metags = []
     for filename in args.metagenomes:
@@ -51,6 +61,9 @@ def main():
     for i in range(args.num_iterations):
         random.shuffle(mhlist)
         ng = Nodegraph(args.ksize, args.nodegraph_size, args.nodegraph_num)
+        if preload_mh:
+            ng.update(preload_mh)
+
         for n, mh in enumerate(mhlist):
             ng.update(mh)
             if n % 100 == 0:
@@ -72,12 +85,17 @@ def main():
                         "metag": name,
                     })
 
+        if ng.n_occupied() > 0.2 * args.nodegraph_size:
+            print('WARNING: individual nodegraphs have high occupancy', ng.n_occupied())
+            sys.exit(-1)
+
+
+
     # Convert to pandas DataFrame
     df = pd.DataFrame(all_results)
 
     # Save to CSV
     df.to_csv(args.output, index=False)
-    
 
 
 if __name__ == '__main__':

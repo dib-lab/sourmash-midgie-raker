@@ -1,6 +1,8 @@
 # scripts/rarefy-explainability.py --meta inputs/metags/ERR1135207.sig --db outputs.ath/rename/bin-sketches.renamed.sig.zip --scaled=100_000 -o xxx.csv -N 50
 SKETCHES = OUTPUTS+'/rename/bin-sketches.renamed.sig.zip'
 
+MM, = glob_wildcards('inputs/metags/{metag}.sig')
+
 DEFAULT_KSIZES=[21, 31, 51]
 DEFAULT_SCALED = [10_000]
 NODEGRAPH_SIZE=100_000_000
@@ -11,7 +13,7 @@ SCALED=config.get('rarefy', {}).get('scaled', DEFAULT_SCALED)
 rule rarefaction:
     input:
         expand(OUTPUTS+'/rarefy/rarefaction.k{k}.s{s}.csv', k=KSIZES, s=SCALED),
-        expand(OUTPUTS+'/rarefy/explain.{m}.k31.csv', m=METAGS),
+        expand(OUTPUTS+'/rarefy/explain.{m}.k31.csv', m=MM),
 
 rule make_rarefy:
     input:
@@ -26,11 +28,13 @@ rule make_rarefy:
 
 rule metag_explain_curve:
     input:
-        metag="inputs/metags/{m}.trim.sig.zip",
+        metag="inputs/metags/{m}.sig",
         db=SKETCHES,
+        preload=SHARED+'/gtdb-merged.species.sig.zip',
     output:
         OUTPUTS+'/rarefy/explain.{m}.k31.csv'
     shell: """
         scripts/rarefy-explainability.py --metagenomes {input.metag} \
-           --db {input.db} --scaled=10_000 -o {output}
+           --db {input.db} --scaled=10_000 -o {output} \
+           --preload={input.preload}
     """
