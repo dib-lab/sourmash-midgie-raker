@@ -1,10 +1,11 @@
 import pprint
 
 configfile: 'defaults.yaml'
-configfile: 'config.yaml'       # disable eventually...
+# NOTE: _must_ specify an additional config file.
 pprint.pprint(config)
-            
+
 OUTPUTS=config.get('base')['outputs'].rstrip('/')
+SHARED=config.get('shared', 'common').rstrip('/')
 GTDB_DB=config.get('databases')['gtdb_rocksdb']
 GTDB_TAX=config.get('databases')['gtdb_tax']
 GTDB_ZIP=config.get('databases')['gtdb_zip']
@@ -65,6 +66,9 @@ include: "workflows/explain.smk"
 
 # run rarefaction curve on bins
 include: "workflows/rarefy.smk"
+
+# build pangenome databases
+include: "workflows/pangenome.smk"
 
 ## summary rules for convenience:
 

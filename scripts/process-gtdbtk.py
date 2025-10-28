@@ -45,7 +45,8 @@ def main():
 
         assert len(classify)
         if len(classify) == len(RANKS):
-            assert 0           # classified AT species level!
+            lineages_d[ident] = classify
+            continue
 
         n_ranks = len(classify) - 1
         for rank in RANKS[n_ranks + 1:-1]:
