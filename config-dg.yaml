@@ -1,0 +1,12 @@
+base:
+ bin_location: '/home/ctbrown/scratch3/2025-other-pig-bins/annie-dl'
+ extension: 'fa'
+ outputs: 'outputs.dg'
+
+
+rename:
+ keep_original_ident: False
+ new_prefix: DG
+ gtdbtk_classify:
+    - inputs.dg/gtdbtk/gtdbtk.bac120.summary.tsv
+    - inputs.dg/gtdbtk/gtdbtk.ar53.summary.tsv
