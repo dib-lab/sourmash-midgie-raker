@@ -1,0 +1,8 @@
+base:
+ bin_location: '/group/ctbrowngrp4/2025-amhorst-pigpar-benchmark-data/mattia_data_analysis_ku/unique_genomes/'
+ extension: 'fna'
+ outputs: 'outputs.ku'
+
+rename:
+ keep_original_ident: False
+ new_prefix: NNF_KU                # ignored if keep_original_names is True

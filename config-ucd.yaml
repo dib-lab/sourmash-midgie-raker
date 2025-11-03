@@ -1,0 +1,8 @@
+base:
+ bin_location: '/group/ctbrowngrp4/2025-amhorst-pigpar-benchmark-data/results/all_mags/drep.999/dereplicated_genomes'
+ extension: 'fasta'
+ outputs: 'outputs.ucd'
+
+rename:
+ keep_original_ident: False
+ new_prefix: NNF_UCD                # ignored if keep_original_names is True
