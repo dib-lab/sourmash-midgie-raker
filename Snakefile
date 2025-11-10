@@ -9,6 +9,7 @@ SHARED=config.get('shared', 'common').rstrip('/')
 GTDB_DB=config.get('databases')['gtdb_rocksdb']
 GTDB_TAX=config.get('databases')['gtdb_tax']
 GTDB_ZIP=config.get('databases')['gtdb_zip']
+GTDB_K21_ZIP=config.get('databases')['gtdb_k21_zip']
 
 ###
 
@@ -41,6 +42,8 @@ RANDOM_10_METAGS=[
     "ERR8314788",
     "SRR11126199",
     "SRR11125672",
+    "SRR11124806",
+    "SRR8960971",
 ]
 
 EXPLAIN_METAGS=RANDOM_10_METAGS
