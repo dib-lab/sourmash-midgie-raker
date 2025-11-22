@@ -10,6 +10,7 @@ GTDB_DB=config.get('databases')['gtdb_rocksdb']
 GTDB_TAX=config.get('databases')['gtdb_tax']
 GTDB_ZIP=config.get('databases')['gtdb_zip']
 GTDB_K21_ZIP=config.get('databases')['gtdb_k21_zip']
+GTDB_K51_ZIP=config.get('databases')['gtdb_k51_zip']
 
 ###
 
@@ -72,6 +73,9 @@ include: "workflows/rarefy.smk"
 
 # build pangenome databases
 include: "workflows/pangenome.smk"
+
+# track host content
+include: "workflows/host.smk"
 
 ## summary rules for convenience:
 
