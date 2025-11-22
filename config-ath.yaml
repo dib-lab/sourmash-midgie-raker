@@ -1,0 +1,18 @@
+base:
+ bin_location: '/group/ctbrowngrp2/amhorst/2025-pigparadigm/results/MAGs/all_genomes'
+ extension: 'fasta'
+ outputs: 'outputs.ath'
+
+rename:
+ keep_original_ident: False
+ new_prefix: AtH                # ignored if keep_original_names is True
+ gtdbtk_classify:
+    - inputs.ath/gtdbtk/archaeal_tax.gtdbtk.novel.2.tsv
+    - inputs.ath/gtdbtk/archaeal_tax.gtdbtk.novel.tsv
+    - inputs.ath/gtdbtk/bacterial_tax.gtdbtk.novel.2.tsv
+    - inputs.ath/gtdbtk/bacterial_tax.gtdbtk.novel.tsv
+
+
+rarefy:
+ ksizes: [21, 31, 51]
+ scaled: [1000, 5000, 10_000, 50_000, 100_000]

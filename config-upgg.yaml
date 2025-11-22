@@ -1,0 +1,16 @@
+base:
+ bin_location: '/home/ctbrown/scratch3/2025-other-pig-bins/UPGG'
+ extension: 'fa.gz'
+ outputs: 'outputs.upgg'
+
+rename:
+ keep_original_ident: False
+ new_prefix: UPGG                # ignored if keep_original_names is True
+ gtdbtk_classify:
+  - inputs.upgg/gtdbtk/gtdbtk.ar53.summary.tsv
+  - inputs.upgg/gtdbtk/gtdbtk.bac120.summary.tsv
+
+
+rarefy:
+ ksizes: [21, 31, 51]
+ scaled: [1000, 5000, 10_000, 50_000, 100_000]
