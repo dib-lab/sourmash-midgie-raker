@@ -9,7 +9,7 @@ from sourmash.sourmash_args import SaveSignaturesToLocation
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('pangenome_db')
-    p.add_argument('-k', '--ksize', default=31)
+    p.add_argument('-k', '--ksize', default=31, type=int)
     p.add_argument('-o', '--output', required=True)
     args = p.parse_args()
 
