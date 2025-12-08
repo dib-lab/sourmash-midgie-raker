@@ -1,7 +1,12 @@
+# location of outputs that can be shared across runs, e.g. GTDB pangenome db.
+shared: 'common/'
+
 databases:
     gtdb_rocksdb: '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.rocksdb'
     gtdb_tax: '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226.lineages.sqldb'
     gtdb_zip: '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k31.dna.zip'
+    gtdb_k21_zip: '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k21.dna.zip'
+    gtdb_k51_zip: '/group/ctbrowngrp5/sourmash-db.new/gtdb-rs226/gtdb-rs226-k51.dna.zip'
 
 rename:
  keep_original_ident: False

@@ -8,7 +8,7 @@ import math
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('results_csv', nargs='+')
+    p.add_argument('results_csv', nargs='+', help='manysearch CSVs')
     p.add_argument('--min-containment', default=.1, type=float)
     p.add_argument('-o', '--output-summary', required=True)
     args = p.parse_args()
@@ -35,6 +35,7 @@ def main():
                 query_name = row['query_name']
                 ident = query_name.split(' ')[0]
 
+                # skip MAGs from the same metagenome
                 metag_in_name = f"_{metag}" in query_name
                 if metag_in_name: # skip? make optional @CTB
                     print('SKIP', metag, query_name)

@@ -1,13 +1,16 @@
 import pprint
 
 configfile: 'defaults.yaml'
-configfile: 'config.yaml'       # disable eventually...
+# NOTE: _must_ specify an additional config file.
 pprint.pprint(config)
-            
+
 OUTPUTS=config.get('base')['outputs'].rstrip('/')
+SHARED=config.get('shared', 'common').rstrip('/')
 GTDB_DB=config.get('databases')['gtdb_rocksdb']
 GTDB_TAX=config.get('databases')['gtdb_tax']
 GTDB_ZIP=config.get('databases')['gtdb_zip']
+GTDB_K21_ZIP=config.get('databases')['gtdb_k21_zip']
+GTDB_K51_ZIP=config.get('databases')['gtdb_k51_zip']
 
 ###
 
@@ -40,6 +43,8 @@ RANDOM_10_METAGS=[
     "ERR8314788",
     "SRR11126199",
     "SRR11125672",
+    "SRR11124806",
+    "SRR8960971",
 ]
 
 EXPLAIN_METAGS=RANDOM_10_METAGS
@@ -65,6 +70,12 @@ include: "workflows/explain.smk"
 
 # run rarefaction curve on bins
 include: "workflows/rarefy.smk"
+
+# build pangenome databases
+include: "workflows/pangenome.smk"
+
+# track host content
+include: "workflows/host.smk"
 
 ## summary rules for convenience:
 

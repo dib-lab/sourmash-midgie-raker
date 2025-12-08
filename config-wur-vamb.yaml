@@ -1,0 +1,8 @@
+base:
+ bin_location: '/home/ctbrown/scratch3/2025-other-pig-bins/wur_mattia_vamb_cobinning_drep-95-99_bins'
+ extension: 'fna.gz'
+ outputs: 'outputs.vamb'
+
+rename:
+ keep_original_ident: False
+ new_prefix: NNF_VAMB                 # ignored if keep_original_names is True
